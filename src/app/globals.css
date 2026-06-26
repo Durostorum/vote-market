@@ -1,0 +1,23 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 222 47% 11%;
+    --surface: 222 47% 11%;
+    --border: 217 33% 17%;
+    --primary: 142 76% 36%;
+    --primary-hover: 142 71% 45%;
+    --danger: 0 84% 60%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-white;
+  }
+}
