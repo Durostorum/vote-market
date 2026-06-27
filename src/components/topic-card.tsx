@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { VoteBar } from "./vote-bar";
 import { cn } from "@/lib/utils";
 
@@ -41,8 +42,17 @@ function formatTimeAgo(dateString: string) {
 }
 
 export function TopicCard({ topic, onVote }: TopicCardProps) {
+  const router = useRouter();
+
+  const handleCardClick = () => {
+    router.push(`/topics/${topic.id}`);
+  };
+
   return (
-    <div className="bg-surface border border-border rounded-xl p-5 hover:border-slate-500 transition-colors cursor-pointer">
+    <div 
+      className="bg-surface border border-border rounded-xl p-5 hover:border-slate-500 transition-colors cursor-pointer"
+      onClick={handleCardClick}
+    >
       <div className="flex items-center gap-2 mb-3">
         <span className={cn("px-2 py-1 text-xs font-medium rounded-full", getCategoryColor(topic.category))}>
           {topic.category}
@@ -54,7 +64,7 @@ export function TopicCard({ topic, onVote }: TopicCardProps) {
       
       <VoteBar upCount={topic.upCount} downCount={topic.downCount} className="mb-4" />
       
-      <div className="flex gap-2">
+      <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
         <button
           onClick={() => onVote?.(topic.id, "UP")}
           className={cn(
