@@ -5,6 +5,7 @@ import { Header } from "@/components/header"
 import { CategoryFilter } from "@/components/category-filter"
 import { TopicCard } from "@/components/topic-card"
 import { NewsSidebar } from "@/components/news-sidebar"
+import { TopicCardSkeleton, NewsCardSkeleton } from "@/components/loading-skeleton"
 
 interface Topic {
   id: string
@@ -36,6 +37,7 @@ export default function Home() {
   const [newsArticles, setNewsArticles] = useState<NewsArticle[]>([])
   const [selectedCategory, setSelectedCategory] = useState("ALL")
   const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     fetchTopics()
@@ -44,15 +46,22 @@ export default function Home() {
 
   const fetchTopics = async () => {
     setIsLoading(true)
+    setError(null)
     try {
       const url = selectedCategory === "ALL" 
         ? "/api/topics" 
         : `/api/topics?category=${selectedCategory}`
       const response = await fetch(url)
+      
+      if (!response.ok) {
+        throw new Error("Failed to fetch topics")
+      }
+      
       const data = await response.json()
       setTopics(data.topics || [])
     } catch (error) {
       console.error("Error fetching topics:", error)
+      setError("Failed to load topics. Please try again.")
     } finally {
       setIsLoading(false)
     }
@@ -64,6 +73,11 @@ export default function Home() {
         ? "/api/news" 
         : `/api/news?category=${selectedCategory}`
       const response = await fetch(url)
+      
+      if (!response.ok) {
+        throw new Error("Failed to fetch news")
+      }
+      
       const data = await response.json()
       setNewsArticles(data.articles || [])
     } catch (error) {
@@ -88,6 +102,7 @@ export default function Home() {
           return
         }
         console.error("Vote error:", error)
+        setError("Failed to vote. Please try again.")
         return
       }
 
@@ -107,6 +122,7 @@ export default function Home() {
       )
     } catch (error) {
       console.error("Error voting:", error)
+      setError("Failed to vote. Please try again.")
     }
   }
 
@@ -127,11 +143,26 @@ export default function Home() {
           />
         </div>
 
+        {error && (
+          <div className="bg-red-500/10 border border-red-500 text-red-500 px-4 py-3 rounded-lg mb-6">
+            {error}
+            <button 
+              onClick={fetchTopics}
+              className="ml-4 underline hover:text-red-400"
+            >
+              Retry
+            </button>
+          </div>
+        )}
+
         <div className="flex gap-8">
           <div className="flex-1">
             {isLoading ? (
-              <div className="text-center py-12">
-                <p className="text-slate-400">Loading topics...</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <TopicCardSkeleton />
+                <TopicCardSkeleton />
+                <TopicCardSkeleton />
+                <TopicCardSkeleton />
               </div>
             ) : topics.length === 0 ? (
               <div className="text-center py-12">
