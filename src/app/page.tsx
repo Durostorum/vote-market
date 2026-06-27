@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { Header } from "@/components/header"
 import { CategoryFilter } from "@/components/category-filter"
 import { TopicCard } from "@/components/topic-card"
+import { NewsSidebar } from "@/components/news-sidebar"
 
 interface Topic {
   id: string
@@ -16,13 +17,29 @@ interface Topic {
   userVote?: "UP" | "DOWN"
 }
 
+interface NewsArticle {
+  id: string
+  title: string
+  link: string
+  summary: string | null
+  imageUrl: string | null
+  publishedAt: string
+  feed: {
+    id: string
+    name: string
+    category: string
+  }
+}
+
 export default function Home() {
   const [topics, setTopics] = useState<Topic[]>([])
+  const [newsArticles, setNewsArticles] = useState<NewsArticle[]>([])
   const [selectedCategory, setSelectedCategory] = useState("ALL")
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     fetchTopics()
+    fetchNews()
   }, [selectedCategory])
 
   const fetchTopics = async () => {
@@ -38,6 +55,19 @@ export default function Home() {
       console.error("Error fetching topics:", error)
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const fetchNews = async () => {
+    try {
+      const url = selectedCategory === "ALL" 
+        ? "/api/news" 
+        : `/api/news?category=${selectedCategory}`
+      const response = await fetch(url)
+      const data = await response.json()
+      setNewsArticles(data.articles || [])
+    } catch (error) {
+      console.error("Error fetching news:", error)
     }
   }
 
@@ -63,7 +93,6 @@ export default function Home() {
 
       const data = await response.json()
       
-      // Update the topic in the list with new vote counts
       setTopics((prevTopics) =>
         prevTopics.map((topic) =>
           topic.id === topicId
@@ -81,6 +110,11 @@ export default function Home() {
     }
   }
 
+  const handlePromote = async (articleId: string) => {
+    // This will be implemented with RSS feed integration
+    console.log("Promote article:", articleId)
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -93,25 +127,34 @@ export default function Home() {
           />
         </div>
 
-        {isLoading ? (
-          <div className="text-center py-12">
-            <p className="text-slate-400">Loading topics...</p>
+        <div className="flex gap-8">
+          <div className="flex-1">
+            {isLoading ? (
+              <div className="text-center py-12">
+                <p className="text-slate-400">Loading topics...</p>
+              </div>
+            ) : topics.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-slate-400">No topics found</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {topics.map((topic) => (
+                  <TopicCard
+                    key={topic.id}
+                    topic={topic}
+                    onVote={handleVote}
+                  />
+                ))}
+              </div>
+            )}
           </div>
-        ) : topics.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-slate-400">No topics found</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {topics.map((topic) => (
-              <TopicCard
-                key={topic.id}
-                topic={topic}
-                onVote={handleVote}
-              />
-            ))}
-          </div>
-        )}
+
+          <NewsSidebar 
+            articles={newsArticles}
+            onPromote={handlePromote}
+          />
+        </div>
       </main>
     </div>
   )
