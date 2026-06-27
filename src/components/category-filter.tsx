@@ -1,14 +1,13 @@
 "use client";
 
-import { Category } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
 
 interface CategoryFilterProps {
-  selectedCategory: Category | "ALL";
-  onCategoryChange: (category: Category | "ALL") => void;
+  selectedCategory: string;
+  onCategoryChange: (category: string) => void;
 }
 
-const categories: (Category | "ALL")[] = ["ALL", "WORLD", "TECH", "BUSINESS"];
+const categories = ["ALL", "WORLD", "TECH", "BUSINESS"];
 
 export function CategoryFilter({ selectedCategory, onCategoryChange }: CategoryFilterProps) {
   return (
