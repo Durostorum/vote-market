@@ -4,6 +4,7 @@ import Google from "next-auth/providers/google"
 import { PrismaAdapter } from "@auth/prisma-adapter"
 import { prisma } from "./db"
 import bcrypt from "bcryptjs"
+import NextAuth from "next-auth"
 
 export const authConfig: NextAuthConfig = {
   adapter: PrismaAdapter(prisma),
@@ -91,3 +92,5 @@ export const authConfig: NextAuthConfig = {
     },
   },
 }
+
+export const { handlers, auth, signIn, signOut } = NextAuth(authConfig)

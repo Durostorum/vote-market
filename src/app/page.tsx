@@ -42,8 +42,43 @@ export default function Home() {
   }
 
   const handleVote = async (topicId: string, direction: "UP" | "DOWN") => {
-    // This will be implemented in Issue #4
-    console.log("Vote:", topicId, direction)
+    try {
+      const response = await fetch(`/api/topics/${topicId}/vote`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ direction }),
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        if (error.error === "Unauthorized") {
+          window.location.href = "/login"
+          return
+        }
+        console.error("Vote error:", error)
+        return
+      }
+
+      const data = await response.json()
+      
+      // Update the topic in the list with new vote counts
+      setTopics((prevTopics) =>
+        prevTopics.map((topic) =>
+          topic.id === topicId
+            ? {
+                ...topic,
+                upCount: data.upCount,
+                downCount: data.downCount,
+                userVote: direction,
+              }
+            : topic
+        )
+      )
+    } catch (error) {
+      console.error("Error voting:", error)
+    }
   }
 
   return (
