@@ -16,74 +16,70 @@ A voting platform for news topics where users can vote on trending news stories 
 - **Framework**: Next.js 14 with App Router
 - **Language**: TypeScript
 - **Styling**: Tailwind CSS
-- **Database**: SQLite with Prisma ORM
+- **Database**: PostgreSQL (Netlify Database) via Prisma ORM
 - **Authentication**: NextAuth.js v5
 - **UI Components**: Custom components with class-variance-authority
 - **RSS Parsing**: rss-parser for news feed integration
+- **Hosting**: Netlify
 
 ## Getting Started
 
 ### Prerequisites
 
 - Node.js 18+ installed
-- npm or yarn package manager
+- [Netlify CLI](https://docs.netlify.com/cli/get-started/) (`npm install -g netlify-cli`)
+- A Netlify account (free tier works)
 
-### Installation
+### Local Development (recommended)
 
-1. Clone the repository:
+The easiest way to develop locally is with `netlify dev`, which automatically provisions a local Postgres-compatible database via Netlify Database:
+
 ```bash
+# 1. Clone the repository
 git clone https://github.com/Durostorum/vote-market.git
 cd vote-market
-```
 
-2. Install dependencies:
-```bash
+# 2. Install dependencies
 npm install
+
+# 3. Log in to Netlify and link the site
+netlify login
+netlify link
+
+# 4. Copy and fill in environment variables
+cp .env.example .env
+# Edit .env — at minimum set NEXTAUTH_SECRET and CRON_SECRET
+
+# 5. Apply database migrations to local DB
+netlify database migrations apply
+
+# 6. Start the development server (with local DB)
+netlify dev
 ```
 
-3. Set up environment variables:
+Open [http://localhost:8888](http://localhost:8888) in your browser.
+
+### Manual Local Setup (without Netlify CLI)
+
+If you prefer not to use `netlify dev`, provide your own PostgreSQL URL:
+
 ```bash
 cp .env.example .env
-```
-
-Edit `.env` with your configuration:
-```env
-# Database
-DATABASE_URL="file:./dev.db"
-
-# Auth
-NEXTAUTH_SECRET="your-secret-key-change-in-production"
-NEXTAUTH_URL="http://localhost:3000"
-
-# Google OAuth (optional)
-GOOGLE_CLIENT_ID=""
-GOOGLE_CLIENT_SECRET=""
-
-# Cron Secret for RSS sync
-CRON_SECRET="your-cron-secret-change-in-production"
-```
-
-4. Initialize the database:
-```bash
-npx prisma migrate dev
-```
-
-5. Run the development server:
-```bash
+# Set DATABASE_URL to a PostgreSQL connection string
+# (e.g. a free Neon or Supabase project)
+npx prisma migrate deploy
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
-
 ## Available Scripts
 
-- `npm run dev` - Start development server
+- `npm run dev` - Start Next.js dev server (requires DATABASE_URL set in .env)
 - `npm run build` - Build for production
 - `npm start` - Start production server
 - `npm run lint` - Run ESLint
-- `npm run mockups:serve` - Serve HTML mockups on port 4321
-- `npm run mockups:capture` - Capture mockup screenshots with Puppeteer
-- `npm run mockups` - Serve and capture mockups
+- `npm test` - Run unit tests (Vitest)
+- `npm run test:coverage` - Run tests with coverage report
+- `npm run seed` - Seed the database with RSS feeds and sample topics
 
 ## Project Structure
 
