@@ -3,6 +3,7 @@ import Credentials from "next-auth/providers/credentials"
 import Google from "next-auth/providers/google"
 import { PrismaAdapter } from "@auth/prisma-adapter"
 import { prisma } from "./db"
+import { env } from "./env"
 import bcrypt from "bcryptjs"
 import NextAuth from "next-auth"
 
@@ -16,8 +17,8 @@ export const authConfig: NextAuthConfig = {
   },
   providers: [
     Google({
-      clientId: process.env.GOOGLE_CLIENT_ID || "",
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
+      clientId: env.GOOGLE_CLIENT_ID,
+      clientSecret: env.GOOGLE_CLIENT_SECRET,
     }),
     Credentials({
       name: "credentials",

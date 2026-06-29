@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { syncRSSFeeds } from "@/lib/rss-parser"
+import { env } from "@/lib/env"
 
 export async function POST(request: Request) {
   try {
@@ -7,7 +8,7 @@ export async function POST(request: Request) {
     const { secret } = body
 
     // Verify cron secret
-    if (secret !== process.env.CRON_SECRET) {
+    if (secret !== env.CRON_SECRET) {
       return NextResponse.json(
         { error: "Unauthorized" },
         { status: 401 }
