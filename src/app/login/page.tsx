@@ -3,23 +3,48 @@
 import { useState } from "react"
 import { signIn } from "next-auth/react"
 import { useRouter } from "next/navigation"
+import { loginSchema, type LoginInput } from "@/lib/validations"
 
 export default function LoginPage() {
   const router = useRouter()
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
+  const [formData, setFormData] = useState<LoginInput>({ email: "", password: "" })
+  const [errors, setErrors] = useState<Partial<Record<keyof LoginInput, string>>>({})
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target
+    setFormData((prev) => ({ ...prev, [name]: value }))
+    // Clear error for this field when user starts typing
+    if (errors[name as keyof LoginInput]) {
+      setErrors((prev) => ({ ...prev, [name]: undefined }))
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
+    setErrors({})
+
+    // Validate form
+    const result = loginSchema.safeParse(formData)
+    if (!result.success) {
+      const fieldErrors: Partial<Record<keyof LoginInput, string>> = {}
+      result.error.errors.forEach((err) => {
+        if (err.path[0]) {
+          fieldErrors[err.path[0] as keyof LoginInput] = err.message
+        }
+      })
+      setErrors(fieldErrors)
+      return
+    }
+
     setIsLoading(true)
 
     try {
       const result = await signIn("credentials", {
-        email,
-        password,
+        email: formData.email,
+        password: formData.password,
         redirect: false,
       })
 
@@ -59,13 +84,18 @@ export default function LoginPage() {
               </label>
               <input
                 id="email"
+                name="email"
                 type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                value={formData.email}
+                onChange={handleChange}
+                className={`w-full px-4 py-3 bg-slate-950 border rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:border-transparent ${
+                  errors.email ? "border-red-500 focus:ring-red-500" : "border-slate-800 focus:ring-green-500"
+                }`}
                 placeholder="you@example.com"
-                required
               />
+              {errors.email && (
+                <p className="text-red-500 text-sm mt-1">{errors.email}</p>
+              )}
             </div>
 
             <div>
@@ -74,13 +104,18 @@ export default function LoginPage() {
               </label>
               <input
                 id="password"
+                name="password"
                 type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                value={formData.password}
+                onChange={handleChange}
+                className={`w-full px-4 py-3 bg-slate-950 border rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:border-transparent ${
+                  errors.password ? "border-red-500 focus:ring-red-500" : "border-slate-800 focus:ring-green-500"
+                }`}
                 placeholder="••••••••"
-                required
               />
+              {errors.password && (
+                <p className="text-red-500 text-sm mt-1">{errors.password}</p>
+              )}
             </div>
 
             <button

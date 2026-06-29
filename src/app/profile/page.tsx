@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { Header } from "@/components/header"
 import { signOut } from "next-auth/react"
+import { profileSchema, passwordSchema, type ProfileInput, type PasswordInput } from "@/lib/validations"
 
 interface UserVote {
   id: string
@@ -33,15 +34,18 @@ export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState<"profile" | "votes" | "comments">("profile")
   
   // Profile form state
-  const [name, setName] = useState("")
-  const [email, setEmail] = useState("")
+  const [profileData, setProfileData] = useState<ProfileInput>({ name: "", email: "" })
+  const [profileErrors, setProfileErrors] = useState<Partial<Record<keyof ProfileInput, string>>>({})
   const [isSaving, setIsSaving] = useState(false)
   const [profileMessage, setProfileMessage] = useState("")
 
   // Password change state
-  const [currentPassword, setCurrentPassword] = useState("")
-  const [newPassword, setNewPassword] = useState("")
-  const [confirmPassword, setConfirmPassword] = useState("")
+  const [passwordData, setPasswordData] = useState<PasswordInput>({ 
+    currentPassword: "", 
+    newPassword: "", 
+    confirmPassword: "" 
+  })
+  const [passwordErrors, setPasswordErrors] = useState<Partial<Record<keyof PasswordInput, string>>>({})
   const [isChangingPassword, setIsChangingPassword] = useState(false)
   const [passwordMessage, setPasswordMessage] = useState("")
 
@@ -52,8 +56,7 @@ export default function ProfilePage() {
 
   useEffect(() => {
     if (session?.user) {
-      setName(session.user.name || "")
-      setEmail(session.user.email || "")
+      setProfileData({ name: session.user.name || "", email: session.user.email || "" })
     }
   }, [session])
 
@@ -91,16 +94,38 @@ export default function ProfilePage() {
     }
   }
 
+  const handleProfileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target
+    setProfileData((prev) => ({ ...prev, [name]: value }))
+    if (profileErrors[name as keyof ProfileInput]) {
+      setProfileErrors((prev) => ({ ...prev, [name]: undefined }))
+    }
+  }
+
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault()
-    setIsSaving(true)
     setProfileMessage("")
+    setProfileErrors({})
+
+    const result = profileSchema.safeParse(profileData)
+    if (!result.success) {
+      const fieldErrors: Partial<Record<keyof ProfileInput, string>> = {}
+      result.error.errors.forEach((err) => {
+        if (err.path[0]) {
+          fieldErrors[err.path[0] as keyof ProfileInput] = err.message
+        }
+      })
+      setProfileErrors(fieldErrors)
+      return
+    }
+
+    setIsSaving(true)
 
     try {
       const response = await fetch("/api/user/profile", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email }),
+        body: JSON.stringify(profileData),
       })
 
       const data = await response.json()
@@ -111,7 +136,7 @@ export default function ProfilePage() {
       }
 
       setProfileMessage("Profile updated successfully")
-      await update({ name, email })
+      await update({ name: profileData.name, email: profileData.email })
     } catch (error) {
       setProfileMessage("An error occurred")
     } finally {
@@ -119,17 +144,28 @@ export default function ProfilePage() {
     }
   }
 
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target
+    setPasswordData((prev) => ({ ...prev, [name]: value }))
+    if (passwordErrors[name as keyof PasswordInput]) {
+      setPasswordErrors((prev) => ({ ...prev, [name]: undefined }))
+    }
+  }
+
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault()
     setPasswordMessage("")
+    setPasswordErrors({})
 
-    if (newPassword !== confirmPassword) {
-      setPasswordMessage("Passwords do not match")
-      return
-    }
-
-    if (newPassword.length < 6) {
-      setPasswordMessage("Password must be at least 6 characters")
+    const result = passwordSchema.safeParse(passwordData)
+    if (!result.success) {
+      const fieldErrors: Partial<Record<keyof PasswordInput, string>> = {}
+      result.error.errors.forEach((err) => {
+        if (err.path[0]) {
+          fieldErrors[err.path[0] as keyof PasswordInput] = err.message
+        }
+      })
+      setPasswordErrors(fieldErrors)
       return
     }
 
@@ -139,7 +175,10 @@ export default function ProfilePage() {
       const response = await fetch("/api/user/password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ currentPassword, newPassword }),
+        body: JSON.stringify({
+          currentPassword: passwordData.currentPassword,
+          newPassword: passwordData.newPassword,
+        }),
       })
 
       const data = await response.json()
@@ -150,9 +189,7 @@ export default function ProfilePage() {
       }
 
       setPasswordMessage("Password changed successfully")
-      setCurrentPassword("")
-      setNewPassword("")
-      setConfirmPassword("")
+      setPasswordData({ currentPassword: "", newPassword: "", confirmPassword: "" })
     } catch (error) {
       setPasswordMessage("An error occurred")
     } finally {
@@ -257,21 +294,33 @@ export default function ProfilePage() {
                 <div>
                   <label className="block text-sm font-medium text-slate-300 mb-2">Name</label>
                   <input
+                    name="name"
                     type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className="w-full px-4 py-3 bg-background border border-border rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-green-500"
+                    value={profileData.name}
+                    onChange={handleProfileChange}
+                    className={`w-full px-4 py-3 bg-background border rounded-lg text-white focus:outline-none focus:ring-2 focus:border-transparent ${
+                      profileErrors.name ? "border-red-500 focus:ring-red-500" : "border-border focus:ring-green-500"
+                    }`}
                   />
+                  {profileErrors.name && (
+                    <p className="text-red-500 text-sm mt-1">{profileErrors.name}</p>
+                  )}
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-slate-300 mb-2">Email</label>
                   <input
+                    name="email"
                     type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full px-4 py-3 bg-background border border-border rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-green-500"
+                    value={profileData.email}
+                    onChange={handleProfileChange}
+                    className={`w-full px-4 py-3 bg-background border rounded-lg text-white focus:outline-none focus:ring-2 focus:border-transparent ${
+                      profileErrors.email ? "border-red-500 focus:ring-red-500" : "border-border focus:ring-green-500"
+                    }`}
                   />
+                  {profileErrors.email && (
+                    <p className="text-red-500 text-sm mt-1">{profileErrors.email}</p>
+                  )}
                 </div>
 
                 <button
@@ -301,36 +350,49 @@ export default function ProfilePage() {
                 <div>
                   <label className="block text-sm font-medium text-slate-300 mb-2">Current Password</label>
                   <input
+                    name="currentPassword"
                     type="password"
-                    value={currentPassword}
-                    onChange={(e) => setCurrentPassword(e.target.value)}
-                    className="w-full px-4 py-3 bg-background border border-border rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-green-500"
-                    required
+                    value={passwordData.currentPassword}
+                    onChange={handlePasswordChange}
+                    className={`w-full px-4 py-3 bg-background border rounded-lg text-white focus:outline-none focus:ring-2 focus:border-transparent ${
+                      passwordErrors.currentPassword ? "border-red-500 focus:ring-red-500" : "border-border focus:ring-green-500"
+                    }`}
                   />
+                  {passwordErrors.currentPassword && (
+                    <p className="text-red-500 text-sm mt-1">{passwordErrors.currentPassword}</p>
+                  )}
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-slate-300 mb-2">New Password</label>
                   <input
+                    name="newPassword"
                     type="password"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    className="w-full px-4 py-3 bg-background border border-border rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-green-500"
-                    required
-                    minLength={6}
+                    value={passwordData.newPassword}
+                    onChange={handlePasswordChange}
+                    className={`w-full px-4 py-3 bg-background border rounded-lg text-white focus:outline-none focus:ring-2 focus:border-transparent ${
+                      passwordErrors.newPassword ? "border-red-500 focus:ring-red-500" : "border-border focus:ring-green-500"
+                    }`}
                   />
+                  {passwordErrors.newPassword && (
+                    <p className="text-red-500 text-sm mt-1">{passwordErrors.newPassword}</p>
+                  )}
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-slate-300 mb-2">Confirm New Password</label>
                   <input
+                    name="confirmPassword"
                     type="password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="w-full px-4 py-3 bg-background border border-border rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-green-500"
-                    required
-                    minLength={6}
+                    value={passwordData.confirmPassword}
+                    onChange={handlePasswordChange}
+                    className={`w-full px-4 py-3 bg-background border rounded-lg text-white focus:outline-none focus:ring-2 focus:border-transparent ${
+                      passwordErrors.confirmPassword ? "border-red-500 focus:ring-red-500" : "border-border focus:ring-green-500"
+                    }`}
                   />
+                  {passwordErrors.confirmPassword && (
+                    <p className="text-red-500 text-sm mt-1">{passwordErrors.confirmPassword}</p>
+                  )}
                 </div>
 
                 <button

@@ -3,27 +3,42 @@
 import { useState } from "react"
 import { signIn } from "next-auth/react"
 import { useRouter } from "next/navigation"
+import { signupSchema, type SignupInput } from "@/lib/validations"
 
 export default function SignupPage() {
   const router = useRouter()
-  const [name, setName] = useState("")
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [confirmPassword, setConfirmPassword] = useState("")
+  const [formData, setFormData] = useState<SignupInput>({ 
+    name: "", 
+    email: "", 
+    password: "", 
+    confirmPassword: "" 
+  })
+  const [errors, setErrors] = useState<Partial<Record<keyof SignupInput, string>>>({})
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target
+    setFormData((prev) => ({ ...prev, [name]: value }))
+    if (errors[name as keyof SignupInput]) {
+      setErrors((prev) => ({ ...prev, [name]: undefined }))
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
+    setErrors({})
 
-    if (password !== confirmPassword) {
-      setError("Passwords do not match")
-      return
-    }
-
-    if (password.length < 6) {
-      setError("Password must be at least 6 characters")
+    const result = signupSchema.safeParse(formData)
+    if (!result.success) {
+      const fieldErrors: Partial<Record<keyof SignupInput, string>> = {}
+      result.error.errors.forEach((err) => {
+        if (err.path[0]) {
+          fieldErrors[err.path[0] as keyof SignupInput] = err.message
+        }
+      })
+      setErrors(fieldErrors)
       return
     }
 
@@ -36,9 +51,9 @@ export default function SignupPage() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          name,
-          email,
-          password,
+          name: formData.name,
+          email: formData.email,
+          password: formData.password,
         }),
       })
 
@@ -49,10 +64,9 @@ export default function SignupPage() {
         return
       }
 
-      // Sign in after successful signup
       const result = await signIn("credentials", {
-        email,
-        password,
+        email: formData.email,
+        password: formData.password,
         redirect: false,
       })
 
@@ -92,12 +106,18 @@ export default function SignupPage() {
               </label>
               <input
                 id="name"
+                name="name"
                 type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                value={formData.name}
+                onChange={handleChange}
+                className={`w-full px-4 py-3 bg-slate-950 border rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:border-transparent ${
+                  errors.name ? "border-red-500 focus:ring-red-500" : "border-slate-800 focus:ring-green-500"
+                }`}
                 placeholder="Your name"
               />
+              {errors.name && (
+                <p className="text-red-500 text-sm mt-1">{errors.name}</p>
+              )}
             </div>
 
             <div>
@@ -106,13 +126,18 @@ export default function SignupPage() {
               </label>
               <input
                 id="email"
+                name="email"
                 type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                value={formData.email}
+                onChange={handleChange}
+                className={`w-full px-4 py-3 bg-slate-950 border rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:border-transparent ${
+                  errors.email ? "border-red-500 focus:ring-red-500" : "border-slate-800 focus:ring-green-500"
+                }`}
                 placeholder="you@example.com"
-                required
               />
+              {errors.email && (
+                <p className="text-red-500 text-sm mt-1">{errors.email}</p>
+              )}
             </div>
 
             <div>
@@ -121,14 +146,18 @@ export default function SignupPage() {
               </label>
               <input
                 id="password"
+                name="password"
                 type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                value={formData.password}
+                onChange={handleChange}
+                className={`w-full px-4 py-3 bg-slate-950 border rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:border-transparent ${
+                  errors.password ? "border-red-500 focus:ring-red-500" : "border-slate-800 focus:ring-green-500"
+                }`}
                 placeholder="••••••••"
-                required
-                minLength={6}
               />
+              {errors.password && (
+                <p className="text-red-500 text-sm mt-1">{errors.password}</p>
+              )}
             </div>
 
             <div>
@@ -137,14 +166,18 @@ export default function SignupPage() {
               </label>
               <input
                 id="confirmPassword"
+                name="confirmPassword"
                 type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                className={`w-full px-4 py-3 bg-slate-950 border rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:border-transparent ${
+                  errors.confirmPassword ? "border-red-500 focus:ring-red-500" : "border-slate-800 focus:ring-green-500"
+                }`}
                 placeholder="••••••••"
-                required
-                minLength={6}
               />
+              {errors.confirmPassword && (
+                <p className="text-red-500 text-sm mt-1">{errors.confirmPassword}</p>
+              )}
             </div>
 
             <button
