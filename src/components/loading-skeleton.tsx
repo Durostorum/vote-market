@@ -1,6 +1,6 @@
 export function TopicCardSkeleton() {
   return (
-    <div className="bg-surface border border-border rounded-xl p-5">
+    <div aria-hidden="true" className="bg-surface border border-border rounded-xl p-5">
       <div className="flex items-center gap-2 mb-3">
         <div className="w-16 h-6 bg-slate-800 rounded-full animate-pulse" />
         <div className="w-16 h-4 bg-slate-800 rounded animate-pulse" />

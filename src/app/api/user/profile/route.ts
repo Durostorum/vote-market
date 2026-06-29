@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/db"
 import { auth } from "@/lib/auth"
-import bcrypt from "bcryptjs"
 import { getSecurityHeaders, sanitizeInput } from "@/lib/security"
 
 export async function PATCH(request: Request) {

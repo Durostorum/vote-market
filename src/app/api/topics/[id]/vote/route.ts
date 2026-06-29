@@ -75,8 +75,8 @@ export async function POST(
         _count: true,
       })
 
-      const upCount = votes.find((v: any) => v.direction === "UP")?._count || 0
-      const downCount = votes.find((v: any) => v.direction === "DOWN")?._count || 0
+      const upCount = votes.find((v: { direction: string; _count: number }) => v.direction === "UP")?._count || 0
+      const downCount = votes.find((v: { direction: string; _count: number }) => v.direction === "DOWN")?._count || 0
 
       await prisma.topic.update({
         where: { id: params.id },

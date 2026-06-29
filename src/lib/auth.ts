@@ -60,6 +60,7 @@ export const authConfig: NextAuthConfig = {
     }),
   ],
   callbacks: {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     async session({ token, session }: any) {
       if (token) {
         session.user.id = token.id
@@ -70,6 +71,7 @@ export const authConfig: NextAuthConfig = {
 
       return session
     },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     async jwt({ token, user }: any) {
       const dbUser = await prisma.user.findFirst({
         where: {

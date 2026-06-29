@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react"
 import { useSession } from "next-auth/react"
-import { useRouter } from "next/navigation"
 import { Header } from "@/components/header"
 import { signOut } from "next-auth/react"
 import { profileSchema, passwordSchema, type ProfileInput, type PasswordInput } from "@/lib/validations"
@@ -30,7 +29,6 @@ interface UserComment {
 
 export default function ProfilePage() {
   const { data: session, update } = useSession()
-  const router = useRouter()
   const [activeTab, setActiveTab] = useState<"profile" | "votes" | "comments">("profile")
   
   // Profile form state
@@ -74,7 +72,7 @@ export default function ProfilePage() {
       const response = await fetch("/api/user/votes")
       const data = await response.json()
       setVotes(data.votes || [])
-    } catch (error) {
+    } catch {
       console.error("Error fetching votes:", error)
     } finally {
       setIsLoadingData(false)
@@ -87,7 +85,7 @@ export default function ProfilePage() {
       const response = await fetch("/api/user/comments")
       const data = await response.json()
       setComments(data.comments || [])
-    } catch (error) {
+    } catch {
       console.error("Error fetching comments:", error)
     } finally {
       setIsLoadingData(false)
@@ -137,7 +135,7 @@ export default function ProfilePage() {
 
       setProfileMessage("Profile updated successfully")
       await update({ name: profileData.name, email: profileData.email })
-    } catch (error) {
+    } catch {
       setProfileMessage("An error occurred")
     } finally {
       setIsSaving(false)
@@ -190,7 +188,7 @@ export default function ProfilePage() {
 
       setPasswordMessage("Password changed successfully")
       setPasswordData({ currentPassword: "", newPassword: "", confirmPassword: "" })
-    } catch (error) {
+    } catch {
       setPasswordMessage("An error occurred")
     } finally {
       setIsChangingPassword(false)
@@ -217,7 +215,7 @@ export default function ProfilePage() {
       }
 
       await signOut({ callbackUrl: "/login" })
-    } catch (error) {
+    } catch {
       alert("An error occurred")
     }
   }

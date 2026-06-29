@@ -23,36 +23,43 @@ interface NewsSidebarProps {
 
 export function NewsSidebar({ articles, onPromote }: NewsSidebarProps) {
   return (
-    <aside className="w-80 hidden lg:block">
-      <h2 className="text-lg font-semibold text-white mb-4">Latest News</h2>
-      <div className="space-y-3">
+    <aside className="w-80 hidden lg:block" aria-label="Latest news">
+      <h2 className="text-lg font-semibold text-white mb-4" id="news-sidebar-heading">Latest News</h2>
+      <div className="space-y-3" role="list" aria-labelledby="news-sidebar-heading">
         {articles.map((article) => (
-          <div key={article.id} className="bg-surface border border-border rounded-lg p-4">
+          <article key={article.id} role="listitem" className="bg-surface border border-border rounded-lg p-4">
             <div className="flex items-center gap-2 mb-2">
-              <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${getCategoryColor(article.feed.category)}`}>
+              <span
+                className={`px-2 py-0.5 text-xs font-medium rounded-full ${getCategoryColor(article.feed.category)}`}
+                aria-label={`Category: ${article.feed.category}`}
+              >
                 {article.feed.category}
               </span>
               <span className="text-xs text-slate-400 font-medium">{article.feed.name}</span>
-              <span className="text-xs text-slate-500">· {formatTimeAgo(article.publishedAt)}</span>
+              <time dateTime={article.publishedAt} className="text-xs text-slate-500">
+                · {formatTimeAgo(article.publishedAt)}
+              </time>
             </div>
-            <h4 className="text-sm font-medium text-white mb-2 line-clamp-2">{article.title}</h4>
+            <h3 className="text-sm font-medium text-white mb-2 line-clamp-2">{article.title}</h3>
             <div className="flex gap-2">
               <a
                 href={article.link}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-xs text-primary hover:text-primary-hover"
+                aria-label={`Read full article: ${article.title} (opens in new tab)`}
+                className="text-xs text-primary hover:text-primary-hover focus:outline-none focus:ring-1 focus:ring-green-500 rounded"
               >
                 Read more
               </a>
               <button
                 onClick={() => onPromote?.(article.id)}
-                className="text-xs text-slate-400 hover:text-white"
+                aria-label={`Promote "${article.title}" as a voting topic`}
+                className="text-xs text-slate-400 hover:text-white focus:outline-none focus:ring-1 focus:ring-green-500 rounded"
               >
                 Vote on this
               </button>
             </div>
-          </div>
+          </article>
         ))}
       </div>
     </aside>
