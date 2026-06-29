@@ -72,8 +72,8 @@ export default function ProfilePage() {
       const response = await fetch("/api/user/votes")
       const data = await response.json()
       setVotes(data.votes || [])
-    } catch {
-      console.error("Error fetching votes:", error)
+    } catch (err) {
+      console.error("Error fetching votes:", err)
     } finally {
       setIsLoadingData(false)
     }
@@ -85,8 +85,8 @@ export default function ProfilePage() {
       const response = await fetch("/api/user/comments")
       const data = await response.json()
       setComments(data.comments || [])
-    } catch {
-      console.error("Error fetching comments:", error)
+    } catch (err) {
+      console.error("Error fetching comments:", err)
     } finally {
       setIsLoadingData(false)
     }

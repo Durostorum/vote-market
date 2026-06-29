@@ -1,11 +1,9 @@
 [build]
-command = "npx prisma migrate deploy && next build"
+command = "npx prisma generate && next build"
 publish = ".next"
 
 [build.environment]
-# Map Netlify's auto-provisioned Postgres URL to what Prisma expects.
-# NETLIFY_DB_URL is set automatically when @netlify/database is installed.
-DATABASE_URL = "$NETLIFY_DB_URL"
+# DATABASE_URL must be set in Netlify site environment variables.
 # Tell Next.js / Prisma to skip the client binary check during install
 PRISMA_GENERATE_SKIP_AUTOINSTALL = "true"
 

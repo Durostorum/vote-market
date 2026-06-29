@@ -37,6 +37,9 @@ Choose **"Create & configure a new site"**, then accept the detected build setti
 In the **Netlify dashboard → Site → Environment variables** (or via CLI):
 
 ```bash
+# External PostgreSQL connection string (Neon, Supabase, Railway, etc.)
+netlify env:set DATABASE_URL "postgresql://user:pass@host:5432/dbname"
+
 # Generate a strong secret:  openssl rand -base64 32
 netlify env:set NEXTAUTH_SECRET "your-32-char-secret"
 
@@ -51,9 +54,10 @@ netlify env:set GOOGLE_CLIENT_ID "your-google-client-id"
 netlify env:set GOOGLE_CLIENT_SECRET "your-google-client-secret"
 ```
 
-> **DATABASE_URL is set automatically** — `netlify.toml` maps `NETLIFY_DB_URL`
-> (injected by Netlify Database) to `DATABASE_URL` so Prisma picks it up.
-> You do not set `DATABASE_URL` manually.
+> **DATABASE_URL must be set manually.** The free Netlify plan does not
+> include Netlify Database (managed Postgres). Use any external Postgres
+> provider — Neon (neon.tech), Supabase, Railway, or similar all offer
+> free tiers. Copy the connection string into the `DATABASE_URL` env var.
 
 ### 4. Deploy to production
 
@@ -63,18 +67,27 @@ netlify deploy --prod
 
 Netlify will:
 1. Install dependencies
-2. Run `npx prisma migrate deploy` (applies `prisma/migrations/` to the provisioned DB)
+2. Run `npx prisma generate` (generates the Prisma client from `schema.prisma`)
 3. Run `next build`
 4. Upload the `.next` build to the CDN
 
-### 5. Seed initial data (first deploy only)
+> **After setting DATABASE_URL**, update the build command in `netlify.toml`
+> to `npx prisma migrate deploy && next build` so schema migrations are
+> applied automatically on every deploy.
+
+### 5. Apply migrations and seed initial data (first deploy only)
+
+Once `DATABASE_URL` is set:
 
 ```bash
-netlify env:get DATABASE_URL   # copy the value
-DATABASE_URL="<value>" npm run seed
+# Apply Prisma schema to the database
+DATABASE_URL="<your-url>" npx prisma migrate deploy
+
+# Seed initial data
+DATABASE_URL="<your-url>" npm run seed
 ```
 
-Or run it via the Netlify dashboard's one-off function invocation.
+Then trigger a redeploy (or push a new commit) so the live site has the schema in place.
 
 ---
 
@@ -150,7 +163,8 @@ netlify deploy --prod
 ## Troubleshooting
 
 **Build fails with "DATABASE_URL is required"**
-→ Check that `@netlify/database` is in `dependencies` and Netlify Database is enabled for the site (Site → Database tab).
+→ Set `DATABASE_URL` in the Netlify site's environment variables (Site → Environment variables).
+→ Use a free external Postgres: Neon (neon.tech), Supabase (supabase.com), or Railway (railway.app).
 
 **`prisma migrate deploy` fails**
 → Check that `prisma/migrations/migration_lock.toml` has `provider = "postgresql"` and that the migration SQL files are committed.
