@@ -1,186 +1,162 @@
-# Deployment Guide
+# Deployment Guide — Netlify
 
-This guide covers deploying the Vote Market application to production using Vercel.
+Vote Market is deployed on Netlify with:
+- **Netlify Database** (managed PostgreSQL) — auto-provisioned, zero config
+- **Netlify Functions** — Next.js API routes and server components
+- **Netlify Edge** — Next.js middleware
+
+---
 
 ## Prerequisites
 
-- A Vercel account (https://vercel.com)
-- A PostgreSQL database (recommended: Supabase, Neon, or Railway)
-- Google OAuth credentials (https://console.cloud.google.com)
+- A [Netlify account](https://app.netlify.com) (free tier works)
+- Netlify CLI: `npm install -g netlify-cli`
+- This repo connected to GitHub (already done)
 
-## Database Setup
+---
 
-### Option 1: Supabase (Recommended)
+## One-time Setup
 
-1. Create a new project at https://supabase.com
-2. Go to Settings > Database
-3. Copy the connection string
-4. Run Prisma migrations:
-   ```bash
-   npx prisma migrate deploy
-   npx prisma db seed
-   ```
+### 1. Authenticate the CLI
 
-### Option 2: Neon
-
-1. Create a new project at https://neon.tech
-2. Copy the connection string
-3. Run Prisma migrations:
-   ```bash
-   npx prisma migrate deploy
-   npx prisma db seed
-   ```
-
-### Option 3: Railway
-
-1. Create a new PostgreSQL database at https://railway.app
-2. Copy the connection string
-3. Run Prisma migrations:
-   ```bash
-   npx prisma migrate deploy
-   npx prisma db seed
-   ```
-
-## Google OAuth Setup
-
-1. Go to Google Cloud Console (https://console.cloud.google.com)
-2. Create a new project or select an existing one
-3. Enable Google+ API
-4. Go to Credentials > Create Credentials > OAuth client ID
-5. Add authorized redirect URIs:
-   - Development: `http://localhost:3000/api/auth/callback/google`
-   - Production: `https://your-domain.com/api/auth/callback/google`
-6. Copy the Client ID and Client Secret
-
-## Vercel Deployment
-
-### Step 1: Connect Repository
-
-1. Go to Vercel dashboard (https://vercel.com/dashboard)
-2. Click "Add New Project"
-3. Import your GitHub repository
-4. Select the `vote-market` repository
-
-### Step 2: Configure Environment Variables
-
-Add the following environment variables in Vercel:
-
-```
-DATABASE_URL=your-postgresql-connection-string
-NEXTAUTH_SECRET=generate-a-random-32-character-string
-NEXTAUTH_URL=https://your-domain.vercel.app
-GOOGLE_CLIENT_ID=your-google-client-id
-GOOGLE_CLIENT_SECRET=your-google-client-secret
-CRON_SECRET=generate-a-random-32-character-string
-```
-
-To generate a secure NEXTAUTH_SECRET:
 ```bash
-openssl rand -base64 32
+netlify login
 ```
 
-### Step 3: Deploy
+### 2. Create / link the Netlify site
 
-1. Click "Deploy"
-2. Wait for the build tocomplete
-3. Your app will be available at `https://your-project.vercel.app`
+```bash
+# From the repo root — creates the site and writes .netlify/state.json
+netlify init
+```
 
-### Step 4: Run Database Migrations
+Choose **"Create & configure a new site"**, then accept the detected build settings (`next build`, publish `.next`).
 
-After deployment, you need to run the database migrations:
+### 3. Set required environment variables
 
-1. Go to Vercel project settings
-2. Navigate to "Environment Variables"
-3. Add your DATABASE_URL
-4. Run the following command in your terminal:
-   ```bash
-   npx prisma migrate deploy
-   npx prisma db seed
-   ```
+In the **Netlify dashboard → Site → Environment variables** (or via CLI):
 
-Alternatively, you can use Vercel Postgres which handles migrations automatically.
+```bash
+# Generate a strong secret:  openssl rand -base64 32
+netlify env:set NEXTAUTH_SECRET "your-32-char-secret"
 
-## Setting Up Cron Job for RSS Sync
+# Your production URL (set after first deploy if unknown)
+netlify env:set NEXTAUTH_URL "https://your-site.netlify.app"
 
-The RSS feed sync is triggered via a cron job. Set this up in Vercel:
+# RSS sync protection secret
+netlify env:set CRON_SECRET "your-cron-secret"
 
-1. Go to your Vercel project
-2. Navigate to "Settings" > "Cron Jobs"
-3. Add a new cron job:
-   - Name: `rss-sync`
-   - Schedule: `0 */6 * * *` (every 6 hours)
-   - URL: `https://your-domain.vercel.app/api/sync`
-   - Headers: `{"Content-Type": "application/json"}`
-   - Body: `{"secret": "YOUR_CRON_SECRET"}`
+# Google OAuth (optional — omit to disable Google sign-in)
+netlify env:set GOOGLE_CLIENT_ID "your-google-client-id"
+netlify env:set GOOGLE_CLIENT_SECRET "your-google-client-secret"
+```
 
-## Custom Domain (Optional)
+> **DATABASE_URL is set automatically** — `netlify.toml` maps `NETLIFY_DB_URL`
+> (injected by Netlify Database) to `DATABASE_URL` so Prisma picks it up.
+> You do not set `DATABASE_URL` manually.
 
-1. Go to Vercel project settings
-2. Navigate to "Domains"
-3. Add your custom domain
-4. Update DNS records as instructed
-5. Update NEXTAUTH_URL to your custom domain
+### 4. Deploy to production
 
-## Monitoring
+```bash
+netlify deploy --prod
+```
 
-Vercel provides built-in monitoring:
-- Analytics: View visitor stats and performance
-- Logs: View application logs
-- Functions: Monitor serverless function performance
+Netlify will:
+1. Install dependencies
+2. Run `npx prisma migrate deploy` (applies `prisma/migrations/` to the provisioned DB)
+3. Run `next build`
+4. Upload the `.next` build to the CDN
 
-## Security Checklist
+### 5. Seed initial data (first deploy only)
 
-Before going to production, ensure:
+```bash
+netlify env:get DATABASE_URL   # copy the value
+DATABASE_URL="<value>" npm run seed
+```
 
-- [ ] All environment variables are set
-- [ ] DATABASE_URL is using SSL
-- [ ] NEXTAUTH_SECRET is strong and unique
-- [ ] CRON_SECRET is strong and unique
-- [ ] Google OAuth redirect URIs are configured
-- [ ] Rate limiting is enabled
-- [ ] Security headers are configured
-- [ ] Database migrations have been run
-- [ ] Seed data has been loaded (optional)
+Or run it via the Netlify dashboard's one-off function invocation.
+
+---
+
+## Google OAuth Setup (optional)
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com) → APIs & Services → Credentials
+2. Create an OAuth 2.0 Client ID (Web application)
+3. Add Authorized redirect URIs:
+   - `https://your-site.netlify.app/api/auth/callback/google`
+4. Copy Client ID and Client Secret into the Netlify environment variables above
+
+---
+
+## RSS Sync Cron Job
+
+The `/api/sync` endpoint syncs RSS feeds. Set up a Netlify scheduled function or an external cron (e.g. cron-job.org) to call it every 6 hours:
+
+```
+POST https://your-site.netlify.app/api/sync
+Content-Type: application/json
+Body: {"secret": "YOUR_CRON_SECRET"}
+```
+
+---
+
+## Environment Variable Reference
+
+| Variable | Required | Description |
+|---|---|---|
+| `DATABASE_URL` | auto | Set from `NETLIFY_DB_URL` via `netlify.toml` — do not set manually |
+| `NEXTAUTH_SECRET` | ✅ | Random 32+ char string for JWT signing |
+| `NEXTAUTH_URL` | ✅ prod | Full site URL, e.g. `https://your-site.netlify.app` |
+| `CRON_SECRET` | ✅ | Shared secret for `/api/sync` endpoint |
+| `GOOGLE_CLIENT_ID` | optional | Google OAuth client ID |
+| `GOOGLE_CLIENT_SECRET` | optional | Google OAuth client secret |
+
+---
+
+## Smoke-Test Checklist
+
+Run this after every production deploy:
+
+- [ ] Home page loads with topic cards
+- [ ] Category filter (Tech / World / Business / All) works
+- [ ] Sign up with new email → session created
+- [ ] Log out → session cleared; log back in
+- [ ] Upvote a topic → vote bar updates
+- [ ] Navigate to topic detail → full info shown
+- [ ] Post a comment → appears immediately
+- [ ] Visit `/profile` → activity history shows
+- [ ] Change display name → persists after refresh
+- [ ] Visit `/news` → article list visible
+- [ ] Anonymous vote attempt → redirected to `/login`
+
+---
+
+## Updating the Deployment
+
+Every push to `main` triggers a new Netlify build automatically (Git-connected deploy).
+
+To deploy manually:
+
+```bash
+# Preview (test URL, not live)
+netlify deploy
+
+# Production
+netlify deploy --prod
+```
+
+---
 
 ## Troubleshooting
 
-### Build Errors
+**Build fails with "DATABASE_URL is required"**
+→ Check that `@netlify/database` is in `dependencies` and Netlify Database is enabled for the site (Site → Database tab).
 
-If you encounter build errors:
-1. Check the build logs in Vercel
-2. Ensure all dependencies are in package.json
-3. Verify environment variables are set correctly
+**`prisma migrate deploy` fails**
+→ Check that `prisma/migrations/migration_lock.toml` has `provider = "postgresql"` and that the migration SQL files are committed.
 
-### Database Connection Issues
+**NextAuth errors on first load**
+→ Ensure `NEXTAUTH_SECRET` and `NEXTAUTH_URL` are set in environment variables and the deploy was triggered after setting them.
 
-If the app can't connect to the database:
-1. Verify DATABASE_URL is correct
-2. Ensure the database allows connections from Vercel's IP ranges
-3. Check if SSL is required
-
-### Authentication Issues
-
-If OAuth fails:
-1. Verify Google OAuth credentials
-2. Check redirect URIs match exactly
-3. Ensure NEXTAUTH_URL is correct
-
-## Post-Deployment
-
-1. Test all features:
-   - User signup/login
-   - Voting functionality
-   - Comments
-   - Profile management
-   - RSS feed sync (via cron job)
-
-2. Set up monitoring alerts
-
-3. Configure backup strategy for your database
-
-## Scaling
-
-Vercel automatically scales based on traffic. For the database:
-- Supabase: Auto-scales with usage
-- Neon: Auto-scales with usage
-- Railway: Upgrade plan as needed
+**Google sign-in fails**
+→ Verify the redirect URI in Google Cloud Console exactly matches `https://your-site.netlify.app/api/auth/callback/google`.

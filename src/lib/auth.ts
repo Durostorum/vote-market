@@ -16,10 +16,9 @@ export const authConfig: NextAuthConfig = {
     signIn: "/login",
   },
   providers: [
-    Google({
-      clientId: env.GOOGLE_CLIENT_ID,
-      clientSecret: env.GOOGLE_CLIENT_SECRET,
-    }),
+    ...(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET
+      ? [Google({ clientId: env.GOOGLE_CLIENT_ID, clientSecret: env.GOOGLE_CLIENT_SECRET })]
+      : []),
     Credentials({
       name: "credentials",
       credentials: {
@@ -60,6 +59,7 @@ export const authConfig: NextAuthConfig = {
     }),
   ],
   callbacks: {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     async session({ token, session }: any) {
       if (token) {
         session.user.id = token.id
@@ -70,6 +70,7 @@ export const authConfig: NextAuthConfig = {
 
       return session
     },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     async jwt({ token, user }: any) {
       const dbUser = await prisma.user.findFirst({
         where: {

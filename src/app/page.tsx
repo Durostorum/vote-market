@@ -1,11 +1,14 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, lazy, Suspense } from "react"
 import { Header } from "@/components/header"
 import { CategoryFilter } from "@/components/category-filter"
 import { TopicCard } from "@/components/topic-card"
-import { NewsSidebar } from "@/components/news-sidebar"
-import { TopicCardSkeleton, NewsCardSkeleton } from "@/components/loading-skeleton"
+import { TopicCardSkeleton } from "@/components/loading-skeleton"
+
+const NewsSidebar = lazy(() =>
+  import("@/components/news-sidebar").then((m) => ({ default: m.NewsSidebar }))
+)
 
 interface Topic {
   id: string
@@ -39,6 +42,7 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     fetchTopics()
     fetchNews()
@@ -135,7 +139,7 @@ export default function Home() {
     <div className="min-h-screen bg-background">
       <Header />
       
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+      <main id="main-content" className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
         <div className="mb-6 sm:mb-8">
           <CategoryFilter 
             selectedCategory={selectedCategory}
@@ -156,7 +160,7 @@ export default function Home() {
         )}
 
         <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
-          <div className="flex-1 min-w-0">
+          <div className="flex-1 min-w-0" aria-live="polite" aria-busy={isLoading}>
             {isLoading ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 <TopicCardSkeleton />
@@ -184,10 +188,12 @@ export default function Home() {
           </div>
 
           <div className="hidden lg:block w-80 flex-shrink-0">
-            <NewsSidebar 
-              articles={newsArticles}
-              onPromote={handlePromote}
-            />
+            <Suspense fallback={<div className="w-80 h-64 bg-surface border border-border rounded-xl animate-pulse" aria-hidden="true" />}>
+              <NewsSidebar 
+                articles={newsArticles}
+                onPromote={handlePromote}
+              />
+            </Suspense>
           </div>
         </div>
       </main>

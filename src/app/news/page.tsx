@@ -24,6 +24,7 @@ export default function NewsPage() {
   const [selectedCategory, setSelectedCategory] = useState("ALL")
   const [isLoading, setIsLoading] = useState(true)
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     fetchNews()
   }, [selectedCategory])

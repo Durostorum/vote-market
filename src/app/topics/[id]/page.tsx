@@ -6,6 +6,7 @@ import { Header } from "@/components/header"
 import { VoteBar } from "@/components/vote-bar"
 import { useSession } from "next-auth/react"
 import { getCategoryColor, formatTimeAgo } from "@/lib/utils"
+import Image from "next/image"
 
 interface Comment {
   id: string
@@ -162,14 +163,11 @@ export default function TopicDetailPage() {
     )
   }
 
-  const total = topic.upCount + topic.downCount
-  const upPercentage = total > 0 ? Math.round((topic.upCount / total) * 100) : 0
-
   return (
     <div className="min-h-screen bg-background">
       <Header />
       
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+      <main id="main-content" className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
         <button
           onClick={() => router.back()}
           className="text-slate-400 hover:text-white mb-4 sm:mb-6 transition-colors text-sm"
@@ -202,18 +200,20 @@ export default function TopicDetailPage() {
             <VoteBar upCount={topic.upCount} downCount={topic.downCount} />
           </div>
 
-          <div className="flex gap-3 sm:gap-4">
+          <div className="flex gap-3 sm:gap-4" role="group" aria-label="Vote on this topic">
             <button
               onClick={() => handleVote("UP")}
-              className="flex-1 bg-primary/20 border border-primary/50 text-primary py-3 rounded-lg font-medium hover:bg-primary/30 transition-colors min-h-[44px]"
+              aria-label={`Upvote this topic (${topic.upCount} upvotes)`}
+              className="flex-1 bg-primary/20 border border-primary/50 text-primary py-3 rounded-lg font-medium hover:bg-primary/30 transition-colors min-h-[44px] focus:outline-none focus:ring-2 focus:ring-green-500"
             >
-              👍 Up ({topic.upCount})
+              <span aria-hidden="true">👍</span> Up ({topic.upCount})
             </button>
             <button
               onClick={() => handleVote("DOWN")}
-              className="flex-1 bg-danger/20 border border-danger/50 text-danger py-3 rounded-lg font-medium hover:bg-danger/30 transition-colors min-h-[44px]"
+              aria-label={`Downvote this topic (${topic.downCount} downvotes)`}
+              className="flex-1 bg-danger/20 border border-danger/50 text-danger py-3 rounded-lg font-medium hover:bg-danger/30 transition-colors min-h-[44px] focus:outline-none focus:ring-2 focus:ring-red-500"
             >
-              👎 Down ({topic.downCount})
+              <span aria-hidden="true">👎</span> Down ({topic.downCount})
             </button>
           </div>
         </div>
@@ -223,19 +223,26 @@ export default function TopicDetailPage() {
             Comments ({topic.comments.length})
           </h2>
 
-          <form onSubmit={handleSubmitComment} className="mb-6">
+          <form onSubmit={handleSubmitComment} className="mb-6" aria-label="Add a comment">
+            <label htmlFor="comment-input" className="sr-only">
+              {session ? "Write your comment" : "Sign in to comment"}
+            </label>
             <textarea
+              id="comment-input"
               value={comment}
               onChange={(e) => setComment(e.target.value)}
               placeholder={session ? "Add a comment..." : "Sign in to comment"}
               disabled={!session || isSubmitting}
+              aria-disabled={!session || isSubmitting}
+              aria-required="true"
               className="w-full px-4 py-3 bg-background border border-border rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none text-sm sm:text-base"
               rows={3}
             />
             <button
               type="submit"
               disabled={!session || !comment.trim() || isSubmitting}
-              className="mt-2 bg-primary text-white px-6 py-2 rounded-lg font-medium hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors min-h-[44px]"
+              aria-disabled={!session || !comment.trim() || isSubmitting}
+              className="mt-2 bg-primary text-white px-6 py-2 rounded-lg font-medium hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors min-h-[44px] focus:outline-none focus:ring-2 focus:ring-green-500"
             >
               {isSubmitting ? "Posting..." : "Post Comment"}
             </button>
@@ -249,10 +256,12 @@ export default function TopicDetailPage() {
                 <div key={comment.id} className="border-t border-border pt-4">
                   <div className="flex items-center gap-3 mb-2">
                     {comment.user.image ? (
-                      <img
+                      <Image
                         src={comment.user.image}
-                        alt={comment.user.name || "User"}
-                        className="w-8 h-8 rounded-full"
+                        alt={`${comment.user.name || "User"}'s avatar`}
+                        width={32}
+                        height={32}
+                        className="rounded-full"
                       />
                     ) : (
                       <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-slate-400">

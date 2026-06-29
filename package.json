@@ -10,13 +10,17 @@
     "mockups:serve": "npx serve mockups/pages -p 4321",
     "mockups:capture": "node scripts/capture-mockups.mjs",
     "mockups": "npm run mockups:serve & sleep 3 && npm run mockups:capture",
-    "seed": "tsx prisma/seed.ts"
+    "seed": "tsx prisma/seed.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.2",
+    "@netlify/database": "^1.1.0",
     "@prisma/client": "^5.0.0",
     "bcryptjs": "^2.4.3",
     "class-variance-authority": "^0.7.0",
@@ -31,19 +35,26 @@
     "zod": "^3.22.0"
   },
   "devDependencies": {
+    "@netlify/plugin-nextjs": "^5.15.12",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
     "@types/bcryptjs": "^2.4.0",
     "@types/node": "^20.0.0",
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
+    "@vitest/coverage-v8": "^4.1.9",
     "autoprefixer": "^10.4.0",
     "eslint": "^8.0.0",
     "eslint-config-next": "^14.0.0",
+    "jsdom": "^29.1.1",
     "postcss": "^8.4.0",
     "prisma": "^5.0.0",
     "puppeteer": "^22.0.0",
     "serve": "^14.2.0",
     "tailwindcss": "^3.3.0",
     "tsx": "^4.22.4",
-    "typescript": "^5.0.0"
+    "typescript": "^5.0.0",
+    "vitest": "^4.1.9"
   }
 }

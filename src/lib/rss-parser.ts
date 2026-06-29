@@ -95,6 +95,7 @@ export async function syncRSSFeeds() {
   console.log("RSS feed sync completed")
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function extractImageUrl(item: any): string | null {
   // Try to extract image from various RSS feed formats
   if (item.enclosure?.url && item.enclosure.type?.startsWith("image/")) {

@@ -30,7 +30,11 @@ export async function GET(request: Request) {
       take: 20,
     })
 
-    return NextResponse.json({ articles })
+    return NextResponse.json({ articles }, {
+      headers: {
+        "Cache-Control": "public, s-maxage=60, stale-while-revalidate=120",
+      },
+    })
   } catch (error) {
     console.error("Error fetching news:", error)
     return NextResponse.json(
