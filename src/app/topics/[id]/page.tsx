@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation"
 import { Header } from "@/components/header"
 import { VoteBar } from "@/components/vote-bar"
 import { useSession } from "next-auth/react"
+import { getCategoryColor, formatTimeAgo } from "@/lib/utils"
 
 interface Comment {
   id: string
@@ -38,27 +39,6 @@ interface Topic {
     votes: number
     comments: number
   }
-}
-
-function getCategoryColor(category: string) {
-  const colors: Record<string, string> = {
-    TECH: "bg-blue-500/20 text-blue-400",
-    WORLD: "bg-purple-500/20 text-purple-400",
-    BUSINESS: "bg-yellow-500/20 text-yellow-400",
-    OTHER: "bg-slate-500/20 text-slate-400",
-  }
-  return colors[category] || colors.OTHER
-}
-
-function formatTimeAgo(dateString: string) {
-  const date = new Date(dateString)
-  const now = new Date()
-  const seconds = Math.floor((now.getTime() - date.getTime()) / 1000)
-
-  if (seconds < 60) return "just now"
-  if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`
-  if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`
-  return `${Math.floor(seconds / 86400)}d ago`
 }
 
 export default function TopicDetailPage() {
@@ -164,7 +144,7 @@ export default function TopicDetailPage() {
     return (
       <div className="min-h-screen bg-background">
         <Header />
-        <div className="max-w-4xl mx-auto px-6 py-8">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
           <p className="text-slate-400">Loading topic...</p>
         </div>
       </div>
@@ -175,7 +155,7 @@ export default function TopicDetailPage() {
     return (
       <div className="min-h-screen bg-background">
         <Header />
-        <div className="max-w-4xl mx-auto px-6 py-8">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
           <p className="text-slate-400">Topic not found</p>
         </div>
       </div>
@@ -189,15 +169,15 @@ export default function TopicDetailPage() {
     <div className="min-h-screen bg-background">
       <Header />
       
-      <main className="max-w-4xl mx-auto px-6 py-8">
+      <main className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
         <button
           onClick={() => router.back()}
-          className="text-slate-400 hover:text-white mb-6 transition-colors"
+          className="text-slate-400 hover:text-white mb-4 sm:mb-6 transition-colors text-sm"
         >
           ← Back to feed
         </button>
 
-        <div className="bg-surface border border-border rounded-xl p-6 mb-6">
+        <div className="bg-surface border border-border rounded-xl p-4 sm:p-6 mb-6">
           <div className="flex items-center gap-2 mb-4">
             <span className={`px-2 py-1 text-xs font-medium rounded-full ${getCategoryColor(topic.category)}`}>
               {topic.category}
@@ -205,12 +185,12 @@ export default function TopicDetailPage() {
             <span className="text-slate-500 text-xs">{formatTimeAgo(topic.createdAt)}</span>
           </div>
 
-          <h1 className="text-2xl font-bold text-white mb-4">{topic.title}</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-white mb-4">{topic.title}</h1>
           
-          <p className="text-slate-300 mb-4">{topic.description}</p>
+          <p className="text-slate-300 mb-4 text-sm sm:text-base">{topic.description}</p>
 
           {topic.sourceUrl && (
-            <p className="text-sm text-slate-500 mb-6">
+            <p className="text-xs sm:text-sm text-slate-500 mb-6">
               Source:{" "}
               <a href={topic.sourceUrl} target="_blank" rel="noopener noreferrer" className="text-green-500 hover:underline">
                 {new URL(topic.sourceUrl).hostname}
@@ -222,24 +202,24 @@ export default function TopicDetailPage() {
             <VoteBar upCount={topic.upCount} downCount={topic.downCount} />
           </div>
 
-          <div className="flex gap-4">
+          <div className="flex gap-3 sm:gap-4">
             <button
               onClick={() => handleVote("UP")}
-              className="flex-1 bg-primary/20 border border-primary/50 text-primary py-3 rounded-lg font-medium hover:bg-primary/30 transition-colors"
+              className="flex-1 bg-primary/20 border border-primary/50 text-primary py-3 rounded-lg font-medium hover:bg-primary/30 transition-colors min-h-[44px]"
             >
               👍 Up ({topic.upCount})
             </button>
             <button
               onClick={() => handleVote("DOWN")}
-              className="flex-1 bg-danger/20 border border-danger/50 text-danger py-3 rounded-lg font-medium hover:bg-danger/30 transition-colors"
+              className="flex-1 bg-danger/20 border border-danger/50 text-danger py-3 rounded-lg font-medium hover:bg-danger/30 transition-colors min-h-[44px]"
             >
               👎 Down ({topic.downCount})
             </button>
           </div>
         </div>
 
-        <div className="bg-surface border border-border rounded-xl p-6">
-          <h2 className="text-xl font-bold text-white mb-6">
+        <div className="bg-surface border border-border rounded-xl p-4 sm:p-6">
+          <h2 className="text-lg sm:text-xl font-bold text-white mb-4 sm:mb-6">
             Comments ({topic.comments.length})
           </h2>
 
@@ -249,13 +229,13 @@ export default function TopicDetailPage() {
               onChange={(e) => setComment(e.target.value)}
               placeholder={session ? "Add a comment..." : "Sign in to comment"}
               disabled={!session || isSubmitting}
-              className="w-full px-4 py-3 bg-background border border-border rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none"
+              className="w-full px-4 py-3 bg-background border border-border rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none text-sm sm:text-base"
               rows={3}
             />
             <button
               type="submit"
               disabled={!session || !comment.trim() || isSubmitting}
-              className="mt-2 bg-primary text-white px-6 py-2 rounded-lg font-medium hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="mt-2 bg-primary text-white px-6 py-2 rounded-lg font-medium hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors min-h-[44px]"
             >
               {isSubmitting ? "Posting..." : "Post Comment"}
             </button>
@@ -279,14 +259,14 @@ export default function TopicDetailPage() {
                         {comment.user.name?.[0] || comment.user.email[0].toUpperCase()}
                       </div>
                     )}
-                    <div>
-                      <p className="text-white font-medium text-sm">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-white font-medium text-sm truncate">
                         {comment.user.name || comment.user.email}
                       </p>
                       <p className="text-slate-500 text-xs">{formatTimeAgo(comment.createdAt)}</p>
                     </div>
                   </div>
-                  <p className="text-slate-300">{comment.body}</p>
+                  <p className="text-slate-300 text-sm sm:text-base">{comment.body}</p>
                 </div>
               ))}
             </div>

@@ -237,14 +237,14 @@ export default function ProfilePage() {
     <div className="min-h-screen bg-background">
       <Header />
       
-      <main className="max-w-4xl mx-auto px-6 py-8">
-        <h1 className="text-3xl font-bold text-white mb-8">Profile</h1>
+      <main className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+        <h1 className="text-2xl sm:text-3xl font-bold text-white mb-6 sm:mb-8">Profile</h1>
 
         <div className="mb-6">
-          <div className="flex gap-4 border-b border-border">
+          <div className="flex gap-2 sm:gap-4 border-b border-border overflow-x-auto">
             <button
               onClick={() => setActiveTab("profile")}
-              className={`px-4 py-2 text-sm font-medium transition-colors ${
+              className={`px-3 sm:px-4 py-2 text-sm font-medium transition-colors whitespace-nowrap ${
                 activeTab === "profile"
                   ? "text-white border-b-2 border-primary"
                   : "text-slate-400 hover:text-white"
@@ -254,7 +254,7 @@ export default function ProfilePage() {
             </button>
             <button
               onClick={() => setActiveTab("votes")}
-              className={`px-4 py-2 text-sm font-medium transition-colors ${
+              className={`px-3 sm:px-4 py-2 text-sm font-medium transition-colors whitespace-nowrap ${
                 activeTab === "votes"
                   ? "text-white border-b-2 border-primary"
                   : "text-slate-400 hover:text-white"
@@ -264,7 +264,7 @@ export default function ProfilePage() {
             </button>
             <button
               onClick={() => setActiveTab("comments")}
-              className={`px-4 py-2 text-sm font-medium transition-colors ${
+              className={`px-3 sm:px-4 py-2 text-sm font-medium transition-colors whitespace-nowrap ${
                 activeTab === "comments"
                   ? "text-white border-b-2 border-primary"
                   : "text-slate-400 hover:text-white"
@@ -276,9 +276,9 @@ export default function ProfilePage() {
         </div>
 
         {activeTab === "profile" && (
-          <div className="space-y-8">
-            <div className="bg-surface border border-border rounded-xl p-6">
-              <h2 className="text-xl font-semibold text-white mb-4">Profile Information</h2>
+          <div className="space-y-6 sm:space-y-8">
+            <div className="bg-surface border border-border rounded-xl p-4 sm:p-6">
+              <h2 className="text-lg sm:text-xl font-semibold text-white mb-4">Profile Information</h2>
               
               {profileMessage && (
                 <div className={`mb-4 px-4 py-2 rounded-lg text-sm ${
@@ -326,15 +326,15 @@ export default function ProfilePage() {
                 <button
                   type="submit"
                   disabled={isSaving}
-                  className="bg-primary text-white px-6 py-2 rounded-lg font-medium hover:bg-primary-hover disabled:opacity-50"
+                  className="bg-primary text-white px-6 py-2 rounded-lg font-medium hover:bg-primary-hover disabled:opacity-50 min-h-[44px]"
                 >
                   {isSaving ? "Saving..." : "Save Changes"}
                 </button>
               </form>
             </div>
 
-            <div className="bg-surface border border-border rounded-xl p-6">
-              <h2 className="text-xl font-semibold text-white mb-4">Change Password</h2>
+            <div className="bg-surface border border-border rounded-xl p-4 sm:p-6">
+              <h2 className="text-lg sm:text-xl font-semibold text-white mb-4">Change Password</h2>
               
               {passwordMessage && (
                 <div className={`mb-4 px-4 py-2 rounded-lg text-sm ${
@@ -398,19 +398,19 @@ export default function ProfilePage() {
                 <button
                   type="submit"
                   disabled={isChangingPassword}
-                  className="bg-primary text-white px-6 py-2 rounded-lg font-medium hover:bg-primary-hover disabled:opacity-50"
+                  className="bg-primary text-white px-6 py-2 rounded-lg font-medium hover:bg-primary-hover disabled:opacity-50 min-h-[44px]"
                 >
                   {isChangingPassword ? "Changing..." : "Change Password"}
                 </button>
               </form>
             </div>
 
-            <div className="bg-surface border border-border rounded-xl p-6">
-              <h2 className="text-xl font-semibold text-white mb-4">Danger Zone</h2>
-              <p className="text-slate-400 mb-4">Once you delete your account, there is no going back.</p>
+            <div className="bg-surface border border-border rounded-xl p-4 sm:p-6">
+              <h2 className="text-lg sm:text-xl font-semibold text-white mb-4">Danger Zone</h2>
+              <p className="text-slate-400 mb-4 text-sm sm:text-base">Once you delete your account, there is no going back.</p>
               <button
                 onClick={handleDeleteAccount}
-                className="bg-danger text-white px-6 py-2 rounded-lg font-medium hover:bg-red-600"
+                className="bg-danger text-white px-6 py-2 rounded-lg font-medium hover:bg-red-600 min-h-[44px]"
               >
                 Delete Account
               </button>
@@ -419,8 +419,8 @@ export default function ProfilePage() {
         )}
 
         {activeTab === "votes" && (
-          <div className="bg-surface border border-border rounded-xl p-6">
-            <h2 className="text-xl font-semibold text-white mb-4">Voting History</h2>
+          <div className="bg-surface border border-border rounded-xl p-4 sm:p-6">
+            <h2 className="text-lg sm:text-xl font-semibold text-white mb-4">Voting History</h2>
             
             {isLoadingData ? (
               <p className="text-slate-400">Loading...</p>
@@ -430,12 +430,12 @@ export default function ProfilePage() {
               <div className="space-y-3">
                 {votes.map((vote) => (
                   <div key={vote.id} className="border-b border-border py-3 last:border-0">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-white font-medium">{vote.topic.title}</p>
-                        <p className="text-slate-500 text-sm">{vote.topic.category}</p>
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-white font-medium text-sm sm:text-base truncate">{vote.topic.title}</p>
+                        <p className="text-slate-500 text-xs sm:text-sm">{vote.topic.category}</p>
                       </div>
-                      <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                      <span className={`px-3 py-1 rounded-full text-xs sm:text-sm font-medium whitespace-nowrap ${
                         vote.direction === "UP" 
                           ? "bg-green-500/20 text-green-500" 
                           : "bg-red-500/20 text-red-500"
@@ -451,8 +451,8 @@ export default function ProfilePage() {
         )}
 
         {activeTab === "comments" && (
-          <div className="bg-surface border border-border rounded-xl p-6">
-            <h2 className="text-xl font-semibold text-white mb-4">Comments</h2>
+          <div className="bg-surface border border-border rounded-xl p-4 sm:p-6">
+            <h2 className="text-lg sm:text-xl font-semibold text-white mb-4">Comments</h2>
             
             {isLoadingData ? (
               <p className="text-slate-400">Loading...</p>
@@ -462,8 +462,8 @@ export default function ProfilePage() {
               <div className="space-y-3">
                 {comments.map((comment) => (
                   <div key={comment.id} className="border-b border-border py-3 last:border-0">
-                    <p className="text-white font-medium mb-1">{comment.topic.title}</p>
-                    <p className="text-slate-300">{comment.body}</p>
+                    <p className="text-white font-medium mb-1 text-sm sm:text-base">{comment.topic.title}</p>
+                    <p className="text-slate-300 text-sm sm:text-base">{comment.body}</p>
                   </div>
                 ))}
               </div>

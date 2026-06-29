@@ -29,7 +29,7 @@ export function TopicCard({ topic, onVote }: TopicCardProps) {
 
   return (
     <div 
-      className="bg-surface border border-border rounded-xl p-5 hover:border-slate-500 transition-colors cursor-pointer"
+      className="bg-surface border border-border rounded-xl p-4 sm:p-5 hover:border-slate-500 transition-colors cursor-pointer"
       onClick={handleCardClick}
     >
       <div className="flex items-center gap-2 mb-3">
@@ -39,7 +39,7 @@ export function TopicCard({ topic, onVote }: TopicCardProps) {
         <span className="text-slate-500 text-xs">{formatTimeAgo(topic.createdAt)}</span>
       </div>
       
-      <h3 className="text-lg font-semibold text-white mb-3">{topic.title}</h3>
+      <h3 className="text-base sm:text-lg font-semibold text-white mb-3 line-clamp-2">{topic.title}</h3>
       
       <VoteBar upCount={topic.upCount} downCount={topic.downCount} className="mb-4" />
       
@@ -47,7 +47,7 @@ export function TopicCard({ topic, onVote }: TopicCardProps) {
         <button
           onClick={() => onVote?.(topic.id, "UP")}
           className={cn(
-            "flex-1 py-2 rounded-lg font-medium transition-colors",
+            "flex-1 py-2.5 sm:py-2 rounded-lg font-medium text-sm sm:text-base transition-colors min-h-[44px]",
             topic.userVote === "UP"
               ? "bg-primary/20 border border-primary/50 text-primary"
               : "bg-background border border-border text-slate-300 hover:border-slate-500"
@@ -58,7 +58,7 @@ export function TopicCard({ topic, onVote }: TopicCardProps) {
         <button
           onClick={() => onVote?.(topic.id, "DOWN")}
           className={cn(
-            "flex-1 py-2 rounded-lg font-medium transition-colors",
+            "flex-1 py-2.5 sm:py-2 rounded-lg font-medium text-sm sm:text-base transition-colors min-h-[44px]",
             topic.userVote === "DOWN"
               ? "bg-danger/20 border border-danger/50 text-danger"
               : "bg-background border border-border text-slate-300 hover:border-slate-500"

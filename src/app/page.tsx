@@ -135,8 +135,8 @@ export default function Home() {
     <div className="min-h-screen bg-background">
       <Header />
       
-      <main className="max-w-7xl mx-auto px-6 py-8">
-        <div className="mb-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+        <div className="mb-6 sm:mb-8">
           <CategoryFilter 
             selectedCategory={selectedCategory}
             onCategoryChange={setSelectedCategory}
@@ -155,10 +155,12 @@ export default function Home() {
           </div>
         )}
 
-        <div className="flex gap-8">
-          <div className="flex-1">
+        <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
+          <div className="flex-1 min-w-0">
             {isLoading ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                <TopicCardSkeleton />
+                <TopicCardSkeleton />
                 <TopicCardSkeleton />
                 <TopicCardSkeleton />
                 <TopicCardSkeleton />
@@ -169,7 +171,7 @@ export default function Home() {
                 <p className="text-slate-400">No topics found</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 {topics.map((topic) => (
                   <TopicCard
                     key={topic.id}
@@ -181,10 +183,12 @@ export default function Home() {
             )}
           </div>
 
-          <NewsSidebar 
-            articles={newsArticles}
-            onPromote={handlePromote}
-          />
+          <div className="hidden lg:block w-80 flex-shrink-0">
+            <NewsSidebar 
+              articles={newsArticles}
+              onPromote={handlePromote}
+            />
+          </div>
         </div>
       </main>
     </div>
