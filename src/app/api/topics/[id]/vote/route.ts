@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/db"
 import { auth } from "@/lib/auth"
+import { rateLimit, getRateLimitHeaders } from "@/lib/rate-limit"
+import { getSecurityHeaders } from "@/lib/security"
 
 export async function POST(
   request: Request,
@@ -34,6 +36,18 @@ export async function POST(
       return NextResponse.json(
         { error: "User not found" },
         { status: 404 }
+      )
+    }
+
+    // Rate limit: 10 votes per minute per user
+    const identifier = `vote:${user.id}`
+    if (!rateLimit(identifier, 10, 60 * 1000)) {
+      return NextResponse.json(
+        { error: "Too many requests" },
+        { 
+          status: 429,
+          headers: getRateLimitHeaders(identifier, 10, 60 * 1000)
+        }
       )
     }
 
@@ -100,12 +114,17 @@ export async function POST(
       vote,
       upCount: topic.upCount,
       downCount: topic.downCount,
+    }, {
+      headers: getSecurityHeaders(),
     })
   } catch (error) {
     console.error("Error voting:", error)
     return NextResponse.json(
       { error: "Failed to vote" },
-      { status: 500 }
+      { 
+        status: 500,
+        headers: getSecurityHeaders(),
+      }
     )
   }
 }

@@ -1,9 +1,23 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/db"
 import bcrypt from "bcryptjs"
+import { rateLimit, getRateLimitHeaders } from "@/lib/rate-limit"
+import { getSecurityHeaders, sanitizeInput } from "@/lib/security"
 
 export async function POST(request: Request) {
   try {
+    // Rate limit: 3 signups per IP per hour
+    const ip = request.headers.get("x-forwarded-for") || "unknown"
+    if (!rateLimit(`signup:${ip}`, 3, 60 * 60 * 1000)) {
+      return NextResponse.json(
+        { error: "Too many signup attempts" },
+        { 
+          status: 429,
+          headers: getRateLimitHeaders(`signup:${ip}`, 3, 60 * 60 * 1000)
+        }
+      )
+    }
+
     const body = await request.json()
     const { email, password, name } = body
 
@@ -34,7 +48,7 @@ export async function POST(request: Request) {
       data: {
         email,
         passwordHash,
-        name: name || null,
+        name: name ? sanitizeInput(name) : null,
       },
     })
 
@@ -46,13 +60,19 @@ export async function POST(request: Request) {
           name: user.name,
         }
       },
-      { status: 201 }
+      { 
+        status: 201,
+        headers: getSecurityHeaders(),
+      }
     )
   } catch (error) {
     console.error("Signup error:", error)
     return NextResponse.json(
       { error: "An error occurred during signup" },
-      { status: 500 }
+      { 
+        status: 500,
+        headers: getSecurityHeaders(),
+      }
     )
   }
 }

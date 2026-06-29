@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { prisma } from "@/lib/db"
 import { auth } from "@/lib/auth"
 import bcrypt from "bcryptjs"
+import { getSecurityHeaders, sanitizeInput } from "@/lib/security"
 
 export async function PATCH(request: Request) {
   try {
@@ -45,7 +46,7 @@ export async function PATCH(request: Request) {
     const updatedUser = await prisma.user.update({
       where: { id: user.id },
       data: {
-        name: name || user.name,
+        name: name ? sanitizeInput(name) : user.name,
         email: email || user.email,
       },
     })
@@ -56,12 +57,17 @@ export async function PATCH(request: Request) {
         email: updatedUser.email,
         name: updatedUser.name,
       },
+    }, {
+      headers: getSecurityHeaders(),
     })
   } catch (error) {
     console.error("Error updating profile:", error)
     return NextResponse.json(
       { error: "Failed to update profile" },
-      { status: 500 }
+      { 
+        status: 500,
+        headers: getSecurityHeaders(),
+      }
     )
   }
 }

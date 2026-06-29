@@ -2,6 +2,8 @@ import { NextResponse } from "next/server"
 import { prisma } from "@/lib/db"
 import { auth } from "@/lib/auth"
 import bcrypt from "bcryptjs"
+import { rateLimit, getRateLimitHeaders } from "@/lib/rate-limit"
+import { getSecurityHeaders } from "@/lib/security"
 
 export async function POST(request: Request) {
   try {
@@ -14,9 +16,6 @@ export async function POST(request: Request) {
       )
     }
 
-    const body = await request.json()
-    const { currentPassword, newPassword } = body
-
     const user = await prisma.user.findUnique({
       where: { email: session.user.email },
     })
@@ -27,6 +26,21 @@ export async function POST(request: Request) {
         { status: 404 }
       )
     }
+
+    // Rate limit: 3 password changes per hour per user
+    const identifier = `password:${user.id}`
+    if (!rateLimit(identifier, 3, 60 * 60 * 1000)) {
+      return NextResponse.json(
+        { error: "Too many password change attempts" },
+        { 
+          status: 429,
+          headers: getRateLimitHeaders(identifier, 3, 60 * 60 * 1000)
+        }
+      )
+    }
+
+    const body = await request.json()
+    const { currentPassword, newPassword } = body
 
     const isCorrectPassword = await bcrypt.compare(
       currentPassword,
@@ -47,12 +61,17 @@ export async function POST(request: Request) {
       data: { passwordHash: newPasswordHash },
     })
 
-    return NextResponse.json({ success: true })
+    return NextResponse.json({ success: true }, {
+      headers: getSecurityHeaders(),
+    })
   } catch (error) {
     console.error("Error changing password:", error)
     return NextResponse.json(
       { error: "Failed to change password" },
-      { status: 500 }
+      { 
+        status: 500,
+        headers: getSecurityHeaders(),
+      }
     )
   }
 }

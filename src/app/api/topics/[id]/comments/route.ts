@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/db"
 import { auth } from "@/lib/auth"
+import { rateLimit, getRateLimitHeaders } from "@/lib/rate-limit"
+import { getSecurityHeaders, sanitizeInput } from "@/lib/security"
 
 export async function POST(
   request: Request,
@@ -37,11 +39,23 @@ export async function POST(
       )
     }
 
+    // Rate limit: 5 comments per minute per user
+    const identifier = `comment:${user.id}`
+    if (!rateLimit(identifier, 5, 60 * 1000)) {
+      return NextResponse.json(
+        { error: "Too many requests" },
+        { 
+          status: 429,
+          headers: getRateLimitHeaders(identifier, 5, 60 * 1000)
+        }
+      )
+    }
+
     const comment = await prisma.comment.create({
       data: {
         userId: user.id,
         topicId: params.id,
-        body: commentBody.trim(),
+        body: sanitizeInput(commentBody),
       },
       include: {
         user: {
@@ -55,12 +69,18 @@ export async function POST(
       },
     })
 
-    return NextResponse.json({ comment }, { status: 201 })
+    return NextResponse.json({ comment }, { 
+      status: 201,
+      headers: getSecurityHeaders(),
+    })
   } catch (error) {
     console.error("Error creating comment:", error)
     return NextResponse.json(
       { error: "Failed to create comment" },
-      { status: 500 }
+      { 
+        status: 500,
+        headers: getSecurityHeaders(),
+      }
     )
   }
 }
